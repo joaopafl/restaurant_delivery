@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:guia_restaurantes/models/profile_menu_item.dart';
 import 'package:guia_restaurantes/views/widgets/profile_menu_tile.dart';
-
+import 'package:guia_restaurantes/views/pages/sign_up_page.dart';
 class ProfilePage extends StatelessWidget {
 
   static const _ifoodRed = Color(0XFFEA1D2C);
@@ -21,8 +21,7 @@ class ProfilePage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _buildHeader(),
-                  const SizedBox(height: 16),
-                  _buildLoginButton(),
+                  _buildLoginButton(context),
                   const SizedBox(height: 16),
                   _buildMenu(),
                   const SizedBox(height: 24)
@@ -47,10 +46,10 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildLoginButton() {
+  Widget _buildLoginButton(BuildContext context) {
     return OutlinedButton(
       onPressed: () {
-        // no futuro: abrir a tela de cadastro
+        Navigator.push(context, MaterialPageRoute(builder: (context) => const SignUpPage()));
       },
       style: OutlinedButton.styleFrom(
         foregroundColor: _ifoodRed,
@@ -74,4 +73,6 @@ class ProfilePage extends StatelessWidget {
       ],
     );
   }
+
+
 }
