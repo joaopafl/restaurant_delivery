@@ -19,6 +19,7 @@ class _SignUpPageState extends State<SignUpPage> {
 
    bool _obscuredPassword = true; // O campo senha começa mas carando a mesma
   bool _acceptedTerms = false;  // O checkkbox do aceite começa desmarcado
+  bool _isLoading = false; // Começa sem o carregamento
 
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -154,32 +155,26 @@ class _SignUpPageState extends State<SignUpPage> {
   //Botão Criar conta
   Widget _buildSubmitButton() {
     return ElevatedButton(
-        onPressed: () {
-          //Inserir mais tarde a ação do botão
-          final formValid = _formKey.currentState!.validate();
-          final termsError = _viewModel.validateTerms(_acceptedTerms);
+        onPressed: _isLoading ? null : _submit,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: SignUpPage._ifoodRed,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape:  RoundedRectangleBorder(borderRadius: BorderRadiusGeometry.circular(10)),
+        ),
 
-          if (termsError != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(termsError)),
-            );
-          }
-
-          final isValid = formValid && termsError == null;
-          print('Formulário válido? $isValid');
-        },
-    style: ElevatedButton.styleFrom(
-      backgroundColor: SignUpPage._ifoodRed,
-      foregroundColor: Colors.white,
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        child: _isLoading
+            ? const SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+        )
+            : const Text(
+                  'Criar conta',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
     ),
-      child: const Text(
-        'Criar Conta',
-        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-      ),
-    );
-  }
+  );
+}
 
   // Check Box de aceite dos termos
   Widget _buildTermsCheckbox() {
@@ -211,4 +206,58 @@ class _SignUpPageState extends State<SignUpPage> {
 
 
   }
+
+  Future<void> _submit() async {
+    // Valida os campos do formulario
+    final isValid = _formKey.currentState!.validate();
+    if (!isValid)
+      return;
+
+    //Confere os termos
+    if (!_acceptedTerms) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Aceite os termos de uso para continuar"))
+      );
+      return;
+    }
+
+    //Se toda a validação passar, startamos o carregamento
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    //Pede o cadastro a viewmodel e aguarda a resposta
+    final error = await _viewModel.register(
+      name: _nameController.text,
+      email: _emailController.text,
+      phone: _phoneController.text,
+      password: _passwordController.text
+    );
+
+    //Para o metodo se a tela for fechada durante a espera
+    if (!mounted)
+      return;
+
+    //Desliga o carregamento
+    setState(() {
+      _isLoading = false;
+    });
+
+    //Se retornar mensagem de erro, exiba-a e e pare o metodo
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error))
+      );
+      return;
+    }
+
+    //Se der bom: avisa e volta para a tela do perfil
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Conta criada! Boas-vindas, ${_nameController.text.trim()}.'))
+    );
+    Navigator.pop(context);
+
+  }
 }
+

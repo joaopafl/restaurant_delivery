@@ -1,4 +1,9 @@
+import 'package:guia_restaurantes/data/network/requester.dart';
+import 'package:guia_restaurantes/data/repositories/user_repository.dart';
+import 'package:guia_restaurantes/models/user.dart';
+
 class SignUpViewmodel {
+  final UserRepository _repository = UserRepository();
   //Recebe o texto do campo e devolve uma mensagem de erro, ou null se estiver valido
   String? validateName(String? value) {
     //Remove os espaços do inicio e do fim, mas se for nulo usa uma string vazia
@@ -50,5 +55,30 @@ class SignUpViewmodel {
   String? validateTerms(bool accepted) {
     if (!accepted) return 'Aceite os termos de uso para continuar';
     return null;
+  }
+
+  Future<String?> register({
+    required String name,
+    required String email,
+    required String phone,
+    required String password}) async {
+    //monta o usuario com os dados que a view entregou
+    final user = User(
+        name: name,
+        email: email,
+        phone: phone,
+        password: password
+    );
+
+    // Pede ao repository para criar o usuario
+    try{
+      await _repository.creatUser(user);
+      return null; // Deu bom
+    } on RequestException catch (e) {
+      return e.message;
+    } catch (_) {
+      return 'Não foi possivel criar a conta. Tente novamente.';
+    }
+
   }
 }
